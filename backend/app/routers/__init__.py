@@ -9,6 +9,7 @@ from __future__ import annotations
 from app.routers import product as router_product
 from app.routers import apigen as router_apigen
 from app.routers import datapack as router_datapack
+from app.routers import datapack_build as router_datapack_build
 from app.routers import version as router_version
 from app.routers import quota as router_quota
 from app.routers import docgen as router_docgen
@@ -23,4 +24,6 @@ from app.routers import crossref as router_crossref
 from app.routers import feedback as router_feedback
 from app.routers import badge as router_badge
 
-ROUTERS = [router_product, router_apigen, router_datapack, router_version, router_quota, router_docgen, router_market, router_usage, router_sandbox, router_pipeline, router_filter, router_scene, router_realtime, router_crossref, router_feedback, router_badge]
+# datapack_build 的前缀是 /api/datapack/builds，必须在 datapack（含 /api/datapack/{entry_id}）
+# 之前注册，否则 0.163 下 entry_id 整型转换失败会直接 422，不再回退匹配。
+ROUTERS = [router_product, router_apigen, router_datapack_build, router_datapack, router_version, router_quota, router_docgen, router_market, router_usage, router_sandbox, router_pipeline, router_filter, router_scene, router_realtime, router_crossref, router_feedback, router_badge]

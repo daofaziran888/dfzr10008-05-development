@@ -18,6 +18,47 @@
       </article>
     </div>
 
+    <!-- 接口配置侧读取数据模型封装发布时冻结的字段映射快照，与封装侧是同一份对象 -->
+    <section class="build-detail" style="margin-bottom: 14px;">
+      <header class="result-head">
+        <strong>数据模型封装字段映射快照（发布后冻结）</strong>
+        <button class="btn ghost" type="button" @click="loadSnapshots">刷新快照</button>
+      </header>
+      <p class="panel-hint">
+        数据来源：<code>/api/apigen/datapack-snapshots</code>，与数据模型封装发布侧读取同一份快照；
+        同一组数据源重复构建按指纹复用，不会产生第二份版本。
+      </p>
+      <table v-if="snapshots.length" class="data-table">
+        <thead>
+          <tr>
+            <th>快照编号</th>
+            <th>版本</th>
+            <th>数据源组</th>
+            <th>输出结构（裁决后唯一口径）</th>
+            <th>冲突记录</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="snapshot in snapshots" :key="snapshot.snapshot_id">
+            <td><code>{{ snapshot.snapshot_id }}</code></td>
+            <td><strong>{{ snapshot.version }}</strong></td>
+            <td>{{ snapshot.source_names.join('、') }}</td>
+            <td>
+              <div class="output-fields">
+                <span v-for="field in snapshot.output_fields" :key="field.target_field" class="output-chip">
+                  {{ field.target_field }}
+                  <small>← {{ field.source }} · {{ field.agg_rule_label }}</small>
+                </span>
+              </div>
+            </td>
+            <td :class="snapshot.conflicts.length ? 'fail-text' : ''">{{ snapshot.conflicts.length }} 项</td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-else class="empty-state">暂无可读快照，请先在「数据模型封装」中完成构建并发布。</p>
+      <p v-if="snapshotError" class="error-text">{{ snapshotError }}</p>
+    </section>
+
     <form class="filter-bar" @submit.prevent="reload">
       <label v-for="field in filterFields" :key="field" class="filter-item">
         <span>{{ field }}</span>
@@ -66,6 +107,8 @@
 import { onMounted, ref } from 'vue'
 
 import { request } from '@/api/client'
+import { fetchApiSnapshots } from '@/views/datapack/build-api'
+import type { MappingSnapshot } from '@/views/datapack/types'
 
 type Row = Record<string, string | number | null>
 
@@ -80,6 +123,17 @@ const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
+const snapshots = ref<MappingSnapshot[]>([])
+const snapshotError = ref('')
+
+async function loadSnapshots() {
+  snapshotError.value = ''
+  try {
+    snapshots.value = await fetchApiSnapshots()
+  } catch (error) {
+    snapshotError.value = error instanceof Error ? error.message : '字段映射快照读取失败'
+  }
+}
 
 function resetFilters() {
   filters.value = {}
@@ -126,5 +180,8 @@ async function reload() {
   }
 }
 
-onMounted(reload)
+onMounted(() => {
+  void reload()
+  void loadSnapshots()
+})
 </script>

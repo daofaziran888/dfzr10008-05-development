@@ -33,3 +33,53 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .link { border: none; background: none; color: var(--brand); cursor: pointer; padding: 0; }
 .page-foot { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .error-text { color: #b42318; }
+.ok-text { color: #067647; }
+.fail-text { color: #b42318; }
+.warn-text { color: #b54708; }
+
+/* 批量构建工作台 */
+.tab-bar { display: flex; gap: 8px; margin: 8px 0 14px; border-bottom: 1px solid var(--border); }
+.tab-item { border: none; background: none; padding: 8px 14px; cursor: pointer; font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent; }
+.tab-item.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+.tab-panel { background: transparent; }
+.panel-title { font-size: 14px; margin: 14px 0 4px; }
+.section-title { font-size: 13px; margin: 16px 0 8px; padding-left: 8px; border-left: 3px solid var(--brand); }
+.panel-hint { color: var(--muted); font-size: 12px; margin: 4px 0 8px; }
+.build-panel, .build-detail, .history-panel, .snapshot-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+.source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.source-card { display: flex; gap: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; cursor: pointer; background: #fbfdff; }
+.source-card.active { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand) inset; background: #f4f8ff; }
+.source-meta { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.source-meta strong { font-size: 13px; }
+.source-fields { color: var(--muted); }
+.mapping-box { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.mapping-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.rule-hint { color: var(--muted); font-size: 12px; }
+.mapping-table { width: 100%; border-collapse: collapse; }
+.mapping-table th, .mapping-table td { border: 1px solid var(--border); padding: 6px 8px; font-size: 12px; text-align: left; }
+.mapping-table select, .mapping-table input { width: 100%; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; }
+.mapping-table tr.invalid { background: #fff5f5; }
+.mapping-foot { display: flex; gap: 8px; margin-top: 8px; }
+.submit-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.link.danger { color: #b42318; }
+.error-list { margin: 0; padding-left: 16px; color: #b42318; }
+.badge { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; border: 1px solid var(--border); color: var(--muted); background: #f8fafc; }
+.badge.ok { color: #067647; background: #ecfdf3; border-color: #a6f4c5; }
+.badge.fail { color: #b42318; background: #fef3f2; border-color: #fda29b; }
+.badge.pending { color: #b54708; background: #fffaeb; border-color: #fedf89; }
+.badge.reused { color: #1f6feb; background: #eff8ff; border-color: #b2ddff; }
+.badge.muted { color: var(--muted); }
+.stat-row.compact .stat-card { padding: 8px 10px; }
+.detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.detail-actions { display: flex; gap: 8px; }
+.source-result { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.result-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.retry-box { margin-top: 10px; padding: 10px; border: 1px dashed var(--brand); border-radius: 8px; background: #f8fbff; }
+.conflict-table td { vertical-align: top; }
+.output-fields { display: flex; flex-wrap: wrap; gap: 8px; }
+.output-chip { display: inline-flex; flex-direction: column; gap: 2px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; background: #fbfdff; font-size: 12px; }
+.output-chip small { color: var(--muted); }
+.snapshot-box { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: #fbfdff; }
+.snapshot-box code, .panel-hint code, .snapshot-panel code { background: #eef2f7; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+.data-table tr.active { background: #f4f8ff; }

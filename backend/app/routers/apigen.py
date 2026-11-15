@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.schemas import ActionResult, EntryPayload, PageResult
 from app.services.apigen import ApigenService
+from app.services.datapack_build import build_service
 
 router = APIRouter(prefix="/api/apigen", tags=["API接口生成"])
 
@@ -28,6 +29,36 @@ def list_entries(
         raise HTTPException(status_code=400, detail="每页最多 200 条，请缩小分页范围")
     items, total = service.list_entries(keyword=keyword, status=status, page=page, size=size)
     return PageResult(items=items, total=total, page=page, size=size)
+
+
+# 静态路径必须排在 /{entry_id} 之前：FastAPI 0.163 下路径参数转换失败会直接 422，
+# 不会再回退匹配后续路由。
+@router.get("/export")
+def export_entries() -> dict[str, Any]:
+    """导出API接口生成清单：返回当前过滤条件下的全量数据。"""
+    items, total = service.list_entries(page=1, size=10000)
+    return {"module": "apigen", "total": total, "items": items}
+
+
+@router.get("/datapack-snapshots")
+def list_datapack_snapshots() -> dict[str, Any]:
+    """接口配置侧读取已发布的字段映射快照。
+
+    快照在数据模型封装发布时冻结，这里与封装侧读取的是同一份对象，
+    保证接口配置拿到的字段口径与已发布封装完全一致。
+    """
+    items = build_service.list_snapshots()
+    items.reverse()
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/datapack-snapshots/{snapshot_id}")
+def get_datapack_snapshot(snapshot_id: str) -> dict[str, Any]:
+    """读取单份冻结快照；未发布或不存在的快照不对外暴露。"""
+    snapshot = build_service.get_snapshot(snapshot_id)
+    if snapshot is None:
+        raise HTTPException(status_code=404, detail=f"字段映射快照 {snapshot_id} 不存在或尚未发布")
+    return snapshot
 
 
 @router.get("/{entry_id}", response_model=dict)
@@ -56,10 +87,3 @@ def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
     if entry is None:
         return ActionResult(ok=False, message=message)
     return ActionResult(ok=True, message=message, entry=entry)
-
-
-@router.get("/export")
-def export_entries() -> dict[str, Any]:
-    """导出API接口生成清单：返回当前过滤条件下的全量数据。"""
-    items, total = service.list_entries(page=1, size=10000)
-    return {"module": "apigen", "total": total, "items": items}

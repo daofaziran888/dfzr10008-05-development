@@ -73,5 +73,52 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 数据模型封装：多数据源批量构建与字段映射快照
+
+数据模型封装页支持多选原始数据源后一次提交批量构建，覆盖「校验 → 裁决 → 隔离 → 发布 → 复用」全链路。
+
+### 业务口径
+
+1. **整组校验、逐条结果**：一次可勾选多个原始数据源（样例含 `orders`、`stores`、`members`），
+   整组提交后按源逐条返回处理结果；每条字段映射先校验目标字段，再校验聚合规则，
+   并核对来源字段是否真实存在。
+2. **冲突裁决唯一口径**：同一输出字段被多个聚合规则写入时，按数据源提交顺序裁决，
+   首个写法生效、其余写法列入冲突项（例如 `stores` 中 `store_level` 同时存在
+   直接映射与维度关联取值两条规则）。冲突不会阻断构建，但必须显式列出。
+3. **失败源隔离 + 单独重试**：校验失败的源单独标记为 `failed` 并从输出结构中隔离，
+   其余源的模型封装仍进入「待发布」；失败项可在不影响同批其他源的情况下单独重新提交，
+   仅失败项允许重试。
+4. **发布冻结快照**：全部源通过后才能发布；发布时深拷贝冻结一份字段映射快照
+   （含每个源的完整映射、裁决后输出结构与冲突记录），冻结后禁止再重试或废弃。
+5. **接口配置侧读同一份快照**：接口配置（`apigen`）通过
+   `/api/apigen/datapack-snapshots` 读取的就是封装发布时冻结的同一对象，
+   保证两侧字段口径完全一致。
+6. **同组重跑复用**：同一组数据源 + 相同映射口径按指纹（归一化映射的 SHA-256）复用，
+   重复构建不会产生第二份版本；单独重跑其中一个源属于另一组数据源，不影响整组快照。
+
+### 接口一览
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/datapack/builds/sources` | 原始数据源目录（字段、支持的聚合规则、默认映射、样例数据） |
+| POST | `/api/datapack/builds` | 多选数据源一次提交，整组校验并逐条返回结果 |
+| GET | `/api/datapack/builds` | 构建记录列表 |
+| GET | `/api/datapack/builds/{id}` | 构建结果：每源处理情况、冲突项、输出结构、快照 |
+| POST | `/api/datapack/builds/{id}/retry` | 单条失败数据源重新提交 |
+| POST | `/api/datapack/builds/{id}/publish` | 发布并冻结字段映射快照 |
+| POST | `/api/datapack/builds/{id}/discard` | 废弃待发布构建（已发布不可废弃） |
+| GET | `/api/apigen/datapack-snapshots` | 接口配置侧读取已发布冻结快照 |
+| GET | `/api/apigen/datapack-snapshots/{snapshot_id}` | 读取单份快照 |
+
+### 验证方式
+
+```bash
+# 后端单元测试（仅标准库 unittest，共 22 个用例）
+cd backend && .venv/bin/python -m unittest tests.test_datapack_build
+
+# 端到端验收脚本（需先启动后端，23 项检查逐条对应需求）
+.venv/bin/python scripts/verify_datapack_build.py
+```
+
 领域：数据工程
 子方向：数据分析与数据应用
